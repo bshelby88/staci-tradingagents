@@ -1,0 +1,8 @@
+.git
+node_modules
+kernel/node_modules
+kernel/test
+discovery.check.js
+discovery.test.js
+README.md
+.dockerignore
