@@ -1,0 +1,9 @@
+{
+  "name": "@staci/kernel",
+  "version": "0.1.0",
+  "main": "src/index.js",
+  "description": "x402-kernel: hardened shared middleware. Honesty by construction, chain-derived ledger, discovery generation, idempotent receipts, multi-facilitator failover.",
+  "peerDependencies": {
+    "@x402/core": "*", "@x402/evm": "*", "@x402/express": "*", "express": "*"
+  }
+}

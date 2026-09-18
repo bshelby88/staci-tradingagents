@@ -1,0 +1,10 @@
+{
+  "name": "@staci/tradingagents",
+  "version": "0.1.0",
+  "main": "server.js",
+  "dependencies": {
+    "@staci/kernel": "*",
+    "@x402/core": "^2", "@x402/evm": "^2", "@x402/express": "^2",
+    "@x402/extensions": "^2", "express": "^4"
+  }
+}
