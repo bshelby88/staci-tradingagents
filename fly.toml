@@ -11,6 +11,11 @@ primary_region = "iad"
 [build]
   dockerfile = "Dockerfile"
 
+# EXEC-22: repo-tracked price (250000 micro = $0.25; equals the code default
+# and the live challenge verified 2026-09-18T12:25Z — behavior-neutral).
+[env]
+  X402_PRICE = "250000"
+
 [http_service]
   internal_port = 3000
   force_https = true
