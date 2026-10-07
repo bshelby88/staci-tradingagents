@@ -18,7 +18,7 @@ if (process.env.CDP_API_KEY_ID) {
   const { facilitator } = require("@coinbase/x402");
   candidates.push(Object.assign(new HTTPFacilitatorClient(facilitator), { name: "cdp" }));
 }
-candidates.push(Object.assign(new HTTPFacilitatorClient({ url: "https://x402.org/facilitator" }), { name: "x402org" }));
+candidates.push(Object.assign(new HTTPFacilitatorClient({ url: "https://raen-facilitator.fly.dev" }), { name: "x402org" }));
 
 const x402Server = new x402ResourceServer(candidates[0]);
 x402Server.register(NETWORK, new ExactEvmScheme());
@@ -33,7 +33,7 @@ const serviceInfo = {
 };
 const routes = {
   "POST /api/analyze-ticker": {
-    accepts: { scheme: "exact", price: PRICE, network: NETWORK, payTo: PAY_TO },
+    accepts: { scheme: "exact", price: PRICE, network: NETWORK, payTo: PAY_TO, extra: { facilitator: "https://raen-facilitator.fly.dev" } },
     description: serviceInfo.description,
     mimeType: "application/json",
   },
