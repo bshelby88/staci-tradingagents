@@ -1,0 +1,31 @@
+# RAEN Fleet — Scheduled CVE Refresh
+# Re-scans the latest :tag every night and alerts on new vulnerabilities
+
+name: Scout — Nightly CVE Refresh
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 06:00 UTC daily
+  workflow_dispatch:       # manual trigger too
+
+permissions:
+  contents: read
+
+jobs:
+  scout-refresh:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - rogueshelby/x402-wall
+          - rogueshelby/rae-kernel
+          - rogueshelby/tiffany-miner
+          - rogueshelby/tiffany-creative
+          - rogueshelby/x402-bazaar
+    steps:
+      - name: Scout quickview
+        uses: docker/scout-action@v1
+        with:
+          command: quickview
+          image: ${{ matrix.image }}:latest
+          organization: rogueshelby
