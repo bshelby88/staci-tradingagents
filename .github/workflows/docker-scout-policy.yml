@@ -1,0 +1,50 @@
+# RAEN Fleet — Docker Scout Policy Gate
+# Run on every push to main — blocks merge if critical/high CVEs found
+# Requires: Docker Scout subscription + rogueshelby org
+
+name: Docker Scout Policy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  scout-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx (cloud)
+        uses: docker/setup-buildx-action@v4
+        with:
+          driver: cloud
+          endpoint: rogueshelby/raen
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKER_USER || 'rogueshelby' }}
+          password: ${{ secrets.DOCKER_PAT }}
+
+      - name: Build image (for scanning only)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          tags: rogueshelby/${{ vars.DOCKER_IMAGE_NAME || github.event.repository.name }}:scout-scan
+          outputs: type=docker,dest=/tmp/image.tar  # load into docker for scan
+
+      - name: Load image
+        run: docker load --input /tmp/image.tar
+
+      - name: Scout policy evaluate
+        uses: docker/scout-action@v1
+        with:
+          command: evaluate
+          image: rogueshelby/${{ vars.DOCKER_IMAGE_NAME || github.event.repository.name }}:scout-scan
+          organization: rogueshelby
+          to-latest: true
+          exit-code: true
