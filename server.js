@@ -6,6 +6,7 @@ const { paymentMiddleware } = require("@x402/express");
 const { x402ResourceServer, HTTPFacilitatorClient } = require("@x402/core/server");
 const { ExactEvmScheme } = require("@x402/evm/exact/server");
 const k = require("@staci/kernel");
+const NETWORK = process.env.X402_NETWORK || "eip155:84532";
 
 const PAY_TO = process.env.X402_PAY_TO; // charter R2: treasury, not operational
 if (!PAY_TO) { console.error("FATAL: X402_PAY_TO required"); process.exit(1); }
@@ -14,11 +15,12 @@ const NETWORK = process.env.CDP_API_KEY_ID ? "eip155:8453" : "eip155:84532";
 const RECEIPT_SECRET = process.env.RECEIPT_SECRET || "staci-dev";
 
 const candidates = [];
-if (process.env.CDP_API_KEY_ID) {
+candidates.push(Object.assign(new HTTPFacilitatorClient({ url: "https://raen-facilitator.fly.dev/facilitator" }), { name: "x402org" }));
+if (process.env.X402_CDP_ENABLED === "true") {
   const { facilitator } = require("@coinbase/x402");
   candidates.push(Object.assign(new HTTPFacilitatorClient(facilitator), { name: "cdp" }));
 }
-candidates.push(Object.assign(new HTTPFacilitatorClient({ url: "https://raen-facilitator.fly.dev/facilitator" }), { name: "x402org" }));
+
 
 const x402Server = new x402ResourceServer(candidates[0]);
 x402Server.register(NETWORK, new ExactEvmScheme());
