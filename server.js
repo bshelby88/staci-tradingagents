@@ -11,7 +11,7 @@ const NETWORK = process.env.X402_NETWORK || "eip155:84532";
 const PAY_TO = process.env.X402_PAY_TO; // charter R2: treasury, not operational
 if (!PAY_TO) { console.error("FATAL: X402_PAY_TO required"); process.exit(1); }
 const PRICE = process.env.X402_PRICE ? `$${(Number(process.env.X402_PRICE) / 1e6).toFixed(2)}` : "$0.25";
-const NETWORK = process.env.CDP_API_KEY_ID ? "eip155:8453" : "eip155:84532";
+
 const RECEIPT_SECRET = process.env.RECEIPT_SECRET || "staci-dev";
 
 const candidates = [];
