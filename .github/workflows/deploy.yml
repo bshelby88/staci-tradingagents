@@ -13,6 +13,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Boot smoke (blocking): prove the app boots and serves HTTP before
+      # deploying. No /health route exists; any HTTP response = booted.
+      - name: Boot smoke — node server.js must boot and serve
+        run: |
+          X402_PAY_TO=0x7861db4efc14a1ed5dd8c96c528a3796560f1393 PORT=3000 node server.js > /tmp/boot-smoke.log 2>&1 &
+          PID=$!
+          trap 'kill $PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 15); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' -m 5 http://localhost:3000/ || true)
+            echo "boot-smoke attempt $i: HTTP ${CODE:-no-response}"
+            if [ -n "$CODE" ] && [ "$CODE" != "000" ]; then echo "::notice::boot smoke OK (HTTP $CODE — process booted)"; exit 0; fi
+            sleep 2
+          done
+          echo "---- boot log (tail) ----"
+          tail -40 /tmp/boot-smoke.log 2>&1 || true
+          echo "::error::boot smoke FAILED — no HTTP response from :3000 within 30s"
+          exit 1
+
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 

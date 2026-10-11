@@ -76,6 +76,31 @@ jobs:
           cache-from: type=gha
           cache-to: type=registry,ref=${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
+      # Boot smoke (non-blocking advisory, mirrors Scout continue-on-error):
+      # pull the pushed image and verify it boots. No /health route exists;
+      # any HTTP response counts as "booted".
+      - name: Boot smoke (non-blocking)
+        if: github.event_name != 'pull_request' && github.event.pull_request.head.repo.fork != true
+        continue-on-error: true
+        run: |
+          IMG="${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}"
+          echo "boot-smoke image: ${IMG}"
+          docker pull "$IMG" || { echo "::warning::boot smoke: image pull failed"; exit 0; }
+          docker run --rm -d -p 3000:3000 \
+            -e PORT=3000 \
+            -e X402_PAY_TO=0x7861db4efc14a1ed5dd8c96c528a3796560f1393 \
+            --name boot-smoke "$IMG"
+          trap 'docker rm -f boot-smoke >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 15); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' -m 5 http://localhost:3000/ || true)
+            echo "boot-smoke attempt $i: HTTP ${CODE:-no-response}"
+            if [ -n "$CODE" ] && [ "$CODE" != "000" ]; then echo "::notice::boot smoke OK (HTTP $CODE — process booted)"; exit 0; fi
+            sleep 2
+          done
+          echo "---- container logs (tail) ----"
+          docker logs boot-smoke 2>&1 | tail -40 || true
+          echo "::warning::boot smoke: no HTTP response within 30s"
+
       # Docker Scout: CVE scan every build (gate: critical/high)
       - name: Docker Scout CVEs
         if: github.event_name != 'pull_request' && github.event.pull_request.head.repo.fork != true
