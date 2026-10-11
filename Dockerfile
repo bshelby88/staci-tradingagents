@@ -12,7 +12,7 @@
 # truth is github.com/bshelby88/staci-tradingagents; this image is now
 # reproducible from the repo alone.
 
-FROM node:22-bookworm-slim
+FROM node:22-trixie-slim
 
 # analyze.py runs under `python3` (see spawn in server.js). stdlib-only;
 # no pip packages required (the tradingagents engine import fails gracefully
