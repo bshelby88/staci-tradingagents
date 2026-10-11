@@ -2,3 +2,5 @@ node_modules/
 *.tgz
 *.log
 desktop.ini
+
+# no-op: re-run scout policy against trixie image (2026-10-11)
