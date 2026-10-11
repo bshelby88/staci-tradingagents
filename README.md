@@ -19,3 +19,5 @@ plain-env payTo override in favor of the app secret — charter R2 alignment).
 Deploy: `flyctl deploy --remote-only` from this repo root (per-app deploy token;
 see fly-secrets-deploy-tokens skill). Tests: `node discovery.check.js`
 (dependency-free surface assertions).
+
+<!-- deploy ping 1791686660 -->
