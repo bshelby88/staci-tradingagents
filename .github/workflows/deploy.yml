@@ -20,3 +20,6 @@ jobs:
         run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Verify web health after deploy
+        run: |
+          timeout 90 bash -c 'until curl -fsS -m 5 https://staci-tradingagents.fly.dev/health; do sleep 5; done' && echo "Health OK: responded within 90s" || { echo "::error::staci-tradingagents did not respond on /health within 90s of deploy"; exit 1; }
