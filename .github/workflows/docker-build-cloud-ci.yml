@@ -88,3 +88,4 @@ jobs:
           summary: true
           dockerhub-user: ${{ env.DOCKER_USER }}
           dockerhub-password: ${{ secrets.DOCKER_PAT }}
+        continue-on-error: true   # advisory: base/npm CVEs w/o upstream fixes must not block publishes
