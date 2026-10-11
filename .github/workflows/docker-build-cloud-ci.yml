@@ -12,8 +12,8 @@ on:
     branches: [main, master]
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: build-${{ github.repository }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
