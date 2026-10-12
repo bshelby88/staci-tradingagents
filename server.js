@@ -6,6 +6,7 @@ const { paymentMiddleware } = require("@x402/express");
 const { x402ResourceServer, HTTPFacilitatorClient } = require("@x402/core/server");
 const { ExactEvmScheme } = require("@x402/evm/exact/server");
 const k = require("@staci/kernel");
+const { createAnalyzeHandler } = require("./analyze-handler");
 const NETWORK = process.env.X402_NETWORK || "eip155:84532";
 
 const PAY_TO = process.env.X402_PAY_TO; // charter R2: treasury, not operational
@@ -77,32 +78,7 @@ function runAnalyze({ ticker, date }) {
   });
 }
 
-app.post("/api/analyze-ticker", async (req, res) => {
-  const { ticker, date } = req.body || {};
-  if (!ticker || !/^[A-Za-z0-9.\-]{1,10}$/.test(String(ticker)))
-    return res.status(400).json({ ok: false, error: "invalid ticker" });
-  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date))
-    return res.status(400).json({ ok: false, error: "date must be YYYY-MM-DD" });
-
-  const nonce = req.get("PAYMENT-SIGNATURE") || req.get("X-Payment") || "";
-  const cached = nonce && receipts.lookup(nonce);
-  if (cached) return res.json({ ok: true, replay: true, receipt: cached.receipt, ...cached.response });
-
-  let result;
-  try {
-    const raw = await runAnalyze({ ticker: String(ticker).toUpperCase(), date });
-    // analyze.py labels its own simulated mode; wrap through the honesty constructors:
-    result = raw.simulated ? k.simulatedResult(raw, "analyzer mock mode")
-                           : k.liveResult(raw);
-  } catch (e) {
-    result = k.simulatedResult(
-      { ticker: String(ticker).toUpperCase(), decision: "HOLD", confidence: "none" },
-      `engine unavailable: ${e.message}`
-    );
-  }
-  const receipt = nonce ? receipts.record(nonce, result, RECEIPT_SECRET) : undefined;
-  res.json({ ok: true, receipt, ...result });
-});
+app.post("/api/analyze-ticker", createAnalyzeHandler({ runAnalyze, k, receipts, receiptSecret: RECEIPT_SECRET }));
 
 const PORT = Number(process.env.PORT) || 3000;
 app.listen(PORT, () => console.log(`staci/tradingagents on :${PORT} (${NETWORK}, ${PRICE})`));

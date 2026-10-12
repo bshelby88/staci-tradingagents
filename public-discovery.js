@@ -35,6 +35,7 @@ function registerPublicDiscovery(app, config) {
       "",
       "To call: send the request without payment, read the 402 `payment-required` header (base64 x402 v2 challenge), sign a USDC transfer for the exact amount to the challenge payTo, re-send with the payment signature header.",
       `Machine contract: ${baseUrl}/openapi.json and ${baseUrl}/.well-known/x402.json.`,
+      "Delivery: if the live analysis engine is unavailable the endpoint returns HTTP 503 and the payment is not settled; it never returns simulated output with HTTP 200.",
       "Not financial advice.",
     ];
     res.type("text/plain").send(`${lines.join("\n")}\n`);
