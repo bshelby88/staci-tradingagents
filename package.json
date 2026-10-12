@@ -2,6 +2,7 @@
   "name": "@staci/tradingagents",
   "version": "0.1.0",
   "main": "server.js",
+  "scripts": { "test": "node --test analyze-handler.test.js" },
   "dependencies": {
     "@coinbase/x402": "^2.1.0",
     "@staci/kernel": "file:kernel",
