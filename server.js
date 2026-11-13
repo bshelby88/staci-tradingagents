@@ -31,7 +31,7 @@ k.initFacilitators([x402Server]).then(({ active, errors }) => {
 const serviceInfo = {
   name: "tradingagents",
   title: "TradingAgents x402 — multi-agent ticker consensus",
-  description: `Pay ${PRICE} USDC on Base, POST /api/analyze-ticker, receive a structured BUY/HOLD/SELL with per-agent reports. Not financial advice.`,
+  description: `Pay ${PRICE} USDC on Base, POST /api/analyze-ticker, receive a structured BUY/HOLD/SELL with per-agent reports. OUTPUT QUALITY (current deployment): the analysis engine is NOT installed in this container — every response is SIMULATED (response carries simulated:true + a reason field): the decision defaults to HOLD and each per-agent report is marked "simulated — no market data analyzed". You are paying for the pipeline shape + verifiable receipt, not live market analysis. Not financial advice.`,
 };
 const routes = {
   "POST /api/analyze-ticker": {
@@ -90,7 +90,7 @@ app.get("/api/analyze-ticker", (_req, res) => {
     quote: { method: "POST", path: "/api/analyze-ticker", scheme: "exact", price: `${PRICE} USDC`, asset: "USDC", network: NETWORK, payTo: PAY_TO },
     how_to_pay: "POST JSON {ticker} WITHOUT payment to receive the 402 challenge (payment-required header AND body), then resend with the PAYMENT-SIGNATURE header (x402 scheme 'exact').",
     manifest: "/.well-known/x402.json",
-    note: "Structured BUY/HOLD/SELL consensus with per-agent reports. Not financial advice.",
+    note: "OUTPUT QUALITY (current): engine not installed in this deployment — every response is SIMULATED (simulated:true, decision defaults to HOLD, per-agent reports marked 'simulated'). Not live market analysis. Not financial advice.",
   });
 });
 
