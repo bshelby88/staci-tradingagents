@@ -15,8 +15,7 @@
 FROM node:22-trixie-slim
 
 # analyze.py runs under `python3` (see spawn in server.js). stdlib-only;
-# no pip packages required (the tradingagents engine import fails gracefully
-# into a labeled-simulated response without them).
+# no pip packages required (without them the engine import fails and the paid route answers 503 — it never sells simulated output).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -29,7 +28,7 @@ COPY package.json package-lock.json ./
 COPY kernel/ ./kernel/
 RUN npm ci --omit=dev --no-audit --no-fund
 
-COPY server.js public-discovery.js analyze.py ./
+COPY server.js public-discovery.js analyze-handler.js analyze.py ./
 
 EXPOSE 3000
 
