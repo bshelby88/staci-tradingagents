@@ -32,7 +32,7 @@ k.initFacilitators([x402Server]).then(({ active, errors }) => {
 const serviceInfo = {
   name: "tradingagents",
   title: "TradingAgents x402 — multi-agent ticker consensus",
-  description: `Pay ${PRICE} USDC on Base, POST /api/analyze-ticker, receive a structured BUY/HOLD/SELL with per-agent reports. Not financial advice.`,
+  description: `Pay ${PRICE} USDC on Base, POST /api/analyze-ticker, receive a structured BUY/HOLD/SELL with per-agent reports. OUTPUT QUALITY (current deployment): the analysis engine is NOT installed in this container — every response is SIMULATED (response carries simulated:true + a reason field): the decision defaults to HOLD and each per-agent report is marked "simulated — no market data analyzed". You are paying for the pipeline shape + verifiable receipt, not live market analysis. Not financial advice.`,
 };
 const routes = {
   "POST /api/analyze-ticker": {
@@ -52,6 +52,49 @@ require("./public-discovery").registerPublicDiscovery(app, {
   routes, serviceInfo, network: NETWORK, payTo: PAY_TO,
   manifest: () => discoveryManifest,
 });
+// [QUOTE-FIX] Port of royal-ruby a22a1d3: decode the payment-required header into
+// every 402 body (the lib sends an empty `{}` body; trust checkers read the body).
+app.use((req, res, next) => {
+  const origEnd = res.end.bind(res);
+  res.end = function (chunk, encoding, cb) {
+    if (res.statusCode === 402) {
+      const text = chunk == null ? "" : String(chunk).trim();
+      const hasBody = text !== "" && text !== "{}";
+      const tok = res.getHeader("payment-required");
+      if (!hasBody && tok) {
+        try {
+          let b64 = String(tok).replace(/-/g, "+").replace(/_/g, "/");
+          while (b64.length % 4) b64 += "=";
+          const challenge = JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+          const body = JSON.stringify(challenge);
+          if (!res.headersSent) {
+            if (!res.getHeader("content-type")) res.setHeader("content-type", "application/json");
+            const cl = res.getHeader("content-length");
+            if (cl) res.setHeader("content-length", Buffer.byteLength(body));
+          }
+          chunk = body;
+          if (typeof encoding === "function") { cb = encoding; encoding = undefined; }
+          else if (typeof chunk === "string" && encoding == null) encoding = "utf8";
+        } catch (_) { /* keep original body on any decode failure */ }
+      }
+    }
+    return origEnd(chunk, encoding, cb);
+  };
+  next();
+});
+
+// [QUOTE-FIX] GET on the paid route returns a machine-readable quote, not 404 HTML.
+app.get("/api/analyze-ticker", (_req, res) => {
+  res.status(402).json({
+    ok: false,
+    error: "This x402 resource is paid and read via POST.",
+    quote: { method: "POST", path: "/api/analyze-ticker", scheme: "exact", price: `${PRICE} USDC`, asset: "USDC", network: NETWORK, payTo: PAY_TO },
+    how_to_pay: "POST JSON {ticker} WITHOUT payment to receive the 402 challenge (payment-required header AND body), then resend with the PAYMENT-SIGNATURE header (x402 scheme 'exact').",
+    manifest: "/.well-known/x402.json",
+    note: "OUTPUT QUALITY (current): engine not installed in this deployment — every response is SIMULATED (simulated:true, decision defaults to HOLD, per-agent reports marked 'simulated'). Not live market analysis. Not financial advice.",
+  });
+});
+
 app.use(paymentMiddleware(routes, x402Server, undefined, undefined, false));
 
 const receipts = k.createReceiptStore();
